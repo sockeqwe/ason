@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<project xmlns="http://maven.apache.org/POM/4.0.0"
-         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+<project xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xmlns="http://maven.apache.org/POM/4.0.0"
          xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
     <parent>
         <artifactId>ason-parent</artifactId>
@@ -12,6 +12,11 @@
     <artifactId>ason-compiler</artifactId>
 
 
+    <name>Ason Compiler</name>
+    <description>
+        Tools to generate Ason Parser code at compile time.
+    </description>
+
     <dependencies>
 
         <dependency>
@@ -19,8 +24,104 @@
             <artifactId>ason</artifactId>
             <version>${project.version}</version>
         </dependency>
-
+        <dependency>
+            <groupId>com.squareup</groupId>
+            <artifactId>javawriter</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>junit</groupId>
+            <artifactId>junit</artifactId>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>com.google.testing.compile</groupId>
+            <artifactId>compile-testing</artifactId>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.truth0</groupId>
+            <artifactId>truth</artifactId>
+            <scope>test</scope>
+        </dependency>
     </dependencies>
+
+
+    <build>
+        <plugins>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-compiler-plugin</artifactId>
+                <executions>
+                    <execution>
+                        <id>default-compile</id>
+                        <goals>
+                            <goal>compile</goal>
+                        </goals>
+                        <configuration>
+                            <compilerArgument>-proc:none</compilerArgument>
+                        </configuration>
+                    </execution>
+                    <execution>
+                        <id>default-test-compile</id>
+                        <goals>
+                            <goal>testCompile</goal>
+                        </goals>
+                        <configuration>
+                            <annotationProcessors>
+                                <annotationProcessor>com.hannesdorfmann.ason.compiler.AsonProcessor
+                                </annotationProcessor>
+                            </annotationProcessors>
+                        </configuration>
+                    </execution>
+                </executions>
+            </plugin>
+
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-invoker-plugin</artifactId>
+                <configuration>
+                    <addTestClassPath>true</addTestClassPath>
+                    <cloneProjectsTo>${project.build.directory}/it</cloneProjectsTo>
+                    <pomIncludes>
+                        <pomInclude>*/pom.xml</pomInclude>
+                    </pomIncludes>
+                    <localRepositoryPath>${project.build.directory}/local-repo</localRepositoryPath>
+                    <postBuildHookScript>verify</postBuildHookScript>
+                    <filterProperties>
+                        <dagger.version>${project.version}</dagger.version>
+                        <dagger.groupId>${project.groupId}</dagger.groupId>
+                    </filterProperties>
+                </configuration>
+                <executions>
+                    <execution>
+                        <id>integration-test</id>
+                        <goals>
+                            <goal>install</goal>
+                            <goal>run</goal>
+                        </goals>
+                    </execution>
+                </executions>
+            </plugin>
+
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-assembly-plugin</artifactId>
+                <configuration>
+                    <descriptorRefs>
+                        <descriptorRef>jar-with-dependencies</descriptorRef>
+                    </descriptorRefs>
+                </configuration>
+                <executions>
+                    <execution>
+                        <phase>package</phase>
+                        <goals>
+                            <goal>single</goal>
+                        </goals>
+                    </execution>
+                </executions>
+            </plugin>
+        </plugins>
+    </build>
 
 
 </project>

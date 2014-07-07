@@ -2,23 +2,25 @@ package com.hannesdorfmann.ason.compiler;
 
 import com.hannesdorfmann.ason.annotation.Json;
 
-import javax.tools.Diagnostic.Kind;
 import javax.annotation.processing.AbstractProcessor;
 import javax.annotation.processing.RoundEnvironment;
 import javax.annotation.processing.SupportedAnnotationTypes;
 import javax.lang.model.SourceVersion;
 import javax.lang.model.element.Element;
 import javax.lang.model.element.TypeElement;
+import javax.tools.Diagnostic.Kind;
 import java.util.Set;
 
 /**
  * This is the default Ason annotation processor
+ *
  * @author Hannes Dorfmann
  */
 @SupportedAnnotationTypes("com.hannesdorfmann.ason.annotation.Json")
 public class AsonProcessor extends AbstractProcessor {
 
-    @Override public SourceVersion getSupportedSourceVersion() {
+    @Override
+    public SourceVersion getSupportedSourceVersion() {
         return SourceVersion.latestSupported();
     }
 

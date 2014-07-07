@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<project xmlns="http://maven.apache.org/POM/4.0.0"
-         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+<project xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xmlns="http://maven.apache.org/POM/4.0.0"
          xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
     <modelVersion>4.0.0</modelVersion>
 
@@ -31,11 +31,11 @@
         <!-- Compilation -->
         <java.version>1.6</java.version>
         <javawriter.version>2.5.0</javawriter.version>
-        <guava.version>15.0</guava.version>
 
         <!-- Test Dependencies -->
         <junit.version>4.10</junit.version>
-        <compile-testing.version>0.4</compile-testing.version>
+        <compile-testing.version>0.5</compile-testing.version>
+        <truth.version>0.13</truth.version>
     </properties>
 
 
@@ -65,9 +65,19 @@
                 <version>${javawriter.version}</version>
             </dependency>
             <dependency>
+                <groupId>junit</groupId>
+                <artifactId>junit</artifactId>
+                <version>${junit.version}</version>
+            </dependency>
+            <dependency>
                 <groupId>com.google.testing.compile</groupId>
                 <artifactId>compile-testing</artifactId>
                 <version>${compile-testing.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.truth0</groupId>
+                <artifactId>truth</artifactId>
+                <version>${truth.version}</version>
             </dependency>
         </dependencies>
     </dependencyManagement>
