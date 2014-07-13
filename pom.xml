@@ -10,13 +10,13 @@
         <version>7</version>
     </parent>
 
-    <groupId>com.hannesdorfmann</groupId>
+    <groupId>com.hannesdorfmann.ason</groupId>
     <artifactId>ason-parent</artifactId>
     <packaging>pom</packaging>
     <version>1.0</version>
     <modules>
         <module>ason</module>
-        <module>compiler</module>
+        <module>processor</module>
     </modules>
 
 

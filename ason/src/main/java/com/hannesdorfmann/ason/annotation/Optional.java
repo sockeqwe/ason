@@ -12,8 +12,7 @@ import java.lang.annotation.Documented;
  *
  * @author Hannes Dorfmann
  */
-@Target(value = { ElementType.TYPE, ElementType.METHOD })
-@Retention(RetentionPolicy.CLASS)
+@Target(value = { ElementType.TYPE, ElementType.METHOD }) @Retention(RetentionPolicy.CLASS)
 @Documented
 public @interface Optional {
 }

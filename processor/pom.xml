@@ -4,15 +4,16 @@
          xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
     <parent>
         <artifactId>ason-parent</artifactId>
-        <groupId>com.hannesdorfmann</groupId>
+        <groupId>com.hannesdorfmann.ason</groupId>
         <version>1.0</version>
+        <relativePath>../pom.xml</relativePath>
     </parent>
     <modelVersion>4.0.0</modelVersion>
 
-    <artifactId>ason-compiler</artifactId>
+    <artifactId>processor</artifactId>
 
 
-    <name>Ason Compiler</name>
+    <name>Ason Annotation Processor</name>
     <description>
         Tools to generate Ason Parser code at compile time.
     </description>
@@ -68,7 +69,7 @@
                         </goals>
                         <configuration>
                             <annotationProcessors>
-                                <annotationProcessor>com.hannesdorfmann.ason.compiler.AsonProcessor
+                                <annotationProcessor>com.hannesdorfmann.ason.processor.AsonProcessor
                                 </annotationProcessor>
                             </annotationProcessors>
                         </configuration>
