@@ -16,16 +16,6 @@
 
 package com.hannesdorfmann.ason.internal;
 
-import com.google.gson.JsonElement;
-import com.google.gson.JsonIOException;
-import com.google.gson.JsonNull;
-import com.google.gson.JsonParseException;
-import com.google.gson.JsonSyntaxException;
-import com.google.gson.internal.bind.TypeAdapters;
-import com.google.gson.stream.JsonReader;
-import com.google.gson.stream.JsonWriter;
-import com.google.gson.stream.MalformedJsonException;
-import java.io.EOFException;
 import java.io.IOException;
 import java.io.Writer;
 
@@ -33,40 +23,7 @@ import java.io.Writer;
  * Reads and writes GSON parse trees over streams.
  */
 public final class Streams {
-  /**
-   * Takes a reader in any state and returns the next value as a JsonElement.
-   */
-  public static JsonElement parse(JsonReader reader) throws JsonParseException {
-    boolean isEmpty = true;
-    try {
-      reader.peek();
-      isEmpty = false;
-      return TypeAdapters.JSON_ELEMENT.read(reader);
-    } catch (EOFException e) {
-      /*
-       * For compatibility with JSON 1.5 and earlier, we return a JsonNull for
-       * empty documents instead of throwing.
-       */
-      if (isEmpty) {
-        return JsonNull.INSTANCE;
-      }
-      // The stream ended prematurely so it is likely a syntax error.
-      throw new JsonSyntaxException(e);
-    } catch (MalformedJsonException e) {
-      throw new JsonSyntaxException(e);
-    } catch (IOException e) {
-      throw new JsonIOException(e);
-    } catch (NumberFormatException e) {
-      throw new JsonSyntaxException(e);
-    }
-  }
-
-  /**
-   * Writes the JSON element to the writer, recursively.
-   */
-  public static void write(JsonElement element, JsonWriter writer) throws IOException {
-    TypeAdapters.JSON_ELEMENT.write(writer, element);
-  }
+ 
 
   @SuppressWarnings("resource")
   public static Writer writerForAppendable(Appendable appendable) {

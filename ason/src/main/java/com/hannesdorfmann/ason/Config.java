@@ -28,7 +28,7 @@ public class Config {
    * otherwise false.
    * <p/>
    * <p>This property can also be set for each class by annotation
-   * {@link com.hannesdorfmann.ason.annotation.Config#ignoreUnknownJsonProperties()}
+   * {@link com.hannesdorfmann.ason.annotation.Config#ignoreUnknownProperties()}}
    * </p>
    */
   public boolean ignoreUnknownJsonProperty = DEFAULT_ignoreUnknownJsonProperty;

@@ -16,7 +16,7 @@
 
 package com.hannesdorfmann.ason.internal;
 
-import com.google.gson.stream.JsonReader;
+import com.hannesdorfmann.ason.stream.JsonReader;
 import java.io.IOException;
 
 /**

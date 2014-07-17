@@ -31,8 +31,8 @@ import java.util.Map;
 import java.util.NoSuchElementException;
 import java.util.Properties;
 
-import static com.google.gson.internal.$Gson$Preconditions.checkArgument;
-import static com.google.gson.internal.$Gson$Preconditions.checkNotNull;
+import static com.hannesdorfmann.ason.internal.$Gson$Preconditions.checkArgument;
+import static com.hannesdorfmann.ason.internal.$Gson$Preconditions.checkNotNull;
 
 /**
  * Static methods for working with types.

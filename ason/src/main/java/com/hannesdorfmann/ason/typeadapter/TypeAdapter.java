@@ -16,6 +16,7 @@
 
 package com.hannesdorfmann.ason.typeadapter;
 
+import com.hannesdorfmann.ason.Config;
 import com.hannesdorfmann.ason.stream.JsonReader;
 import com.hannesdorfmann.ason.stream.JsonToken;
 import com.hannesdorfmann.ason.stream.JsonWriter;
@@ -59,8 +60,8 @@ import java.io.Writer;
  * strings like {@code "5,8"} rather than objects like {@code {"x":5,"y":8}}. In
  * this case the type adapter binds a rich Java class to a compact JSON value.
  *
- * <p>The {@link #read(JsonReader) read()} method must read exactly one value
- * and {@link #write(JsonWriter, Object) write()} must write exactly one value.
+ * <p>The {@link #read(JsonReader, Config) read()} method must read exactly one value
+ * and {@link #write(JsonWriter, Object, Config) write()} must write exactly one value.
  * For primitive types this is means readers should make exactly one call to
  * {@code nextBoolean()}, {@code nextDouble()}, {@code nextInt()}, {@code
  * nextLong()}, {@code nextString()} or {@code nextNull()}. Writers should make
@@ -109,7 +110,7 @@ public abstract class TypeAdapter<T> {
    *
    * @param value the Java object to write. May be null.
    */
-  public abstract void write(JsonWriter out, T value) throws IOException;
+  public abstract void write(JsonWriter out, T value, Config config) throws IOException;
 
   /**
    * Converts {@code value} to a JSON document and writes it to {@code out}.
@@ -118,9 +119,9 @@ public abstract class TypeAdapter<T> {
    * @param value the Java object to convert. May be null.
    * @since 1.0
    */
-  public final void toJson(Writer out, T value) throws IOException {
+  public final void toJson(Writer out, T value, Config config) throws IOException {
     JsonWriter writer = new JsonWriter(out);
-    write(writer, value);
+    write(writer, value, config);
   }
 
   /**
@@ -165,19 +166,19 @@ public abstract class TypeAdapter<T> {
    */
   public final TypeAdapter<T> nullSafe() {
     return new TypeAdapter<T>() {
-      @Override public void write(JsonWriter out, T value) throws IOException {
+      @Override public void write(JsonWriter out, T value, Config config) throws IOException {
         if (value == null) {
           out.nullValue();
         } else {
-          TypeAdapter.this.write(out, value);
+          TypeAdapter.this.write(out, value, config);
         }
       }
-      @Override public T read(JsonReader reader) throws IOException {
+      @Override public T read(JsonReader reader, Config config) throws IOException {
         if (reader.peek() == JsonToken.NULL) {
           reader.nextNull();
           return null;
         }
-        return TypeAdapter.this.read(reader);
+        return TypeAdapter.this.read(reader, config);
       }
     };
   }
@@ -188,9 +189,9 @@ public abstract class TypeAdapter<T> {
    * @param value the Java object to convert. May be null.
    * @since 1.0
    */
-  public final String toJson(T value) throws IOException {
+  public final String toJson(T value, Config config) throws IOException {
     StringWriter stringWriter = new StringWriter();
-    toJson(stringWriter, value);
+    toJson(stringWriter, value, config);
     return stringWriter.toString();
   }
 
@@ -200,7 +201,7 @@ public abstract class TypeAdapter<T> {
    *
    * @return the converted Java object. May be null.
    */
-  public abstract T read(JsonReader in) throws IOException;
+  public abstract T read(JsonReader in, Config config) throws IOException;
 
   /**
    * Converts the JSON document in {@code in} to a Java object. 
@@ -208,9 +209,9 @@ public abstract class TypeAdapter<T> {
    * @return the converted Java object. May be null.
    * @since 1.0
    */
-  public final T fromJson(Reader in) throws IOException {
+  public final T fromJson(Reader in, Config config) throws IOException {
     JsonReader reader = new JsonReader(in);
-    return read(reader);
+    return read(reader, config);
   }
 
   /**
@@ -219,8 +220,8 @@ public abstract class TypeAdapter<T> {
    * @return the converted Java object. May be null.
    * @since 1.0
    */
-  public final T fromJson(String json) throws IOException {
-    return fromJson(new StringReader(json));
+  public final T fromJson(String json, Config config) throws IOException {
+    return fromJson(new StringReader(json), config);
   }
 
 

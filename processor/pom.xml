@@ -15,7 +15,7 @@
 
     <name>Ason Annotation Processor</name>
     <description>
-        Tools to generate Ason Parser code at compile time.
+        Tool to generate Ason Parser code at compile time.
     </description>
 
     <dependencies>
