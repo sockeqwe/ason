@@ -21,6 +21,9 @@ public class Config {
    */
   public static final boolean DEFAULT_writeNullValues = false;
 
+
+  public static final boolean DEFAULT_jsonPropertyRequired = false;
+
   /**
    * If you do <b>not</b> want that an exception will be thrown if a json
    * property is detected that is
@@ -34,7 +37,14 @@ public class Config {
   public boolean ignoreUnknownJsonProperty = DEFAULT_ignoreUnknownJsonProperty;
 
   /**
-   *
+   * Should null values be written while converting java objects to json?
    */
   public boolean writeNullValues = DEFAULT_writeNullValues;
+
+  /**
+   * Is every {@link com.hannesdorfmann.ason.annotation.Property} annoteted property as
+   * default required? Required means that an exception will be thrown, if the property is missing
+   * is json.
+   */
+  public boolean jsonPropertyRequired = DEFAULT_jsonPropertyRequired;
 }

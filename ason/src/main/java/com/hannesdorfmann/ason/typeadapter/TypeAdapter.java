@@ -17,6 +17,7 @@
 package com.hannesdorfmann.ason.typeadapter;
 
 import com.hannesdorfmann.ason.Config;
+import com.hannesdorfmann.ason.reflect.TypeToken;
 import com.hannesdorfmann.ason.stream.JsonReader;
 import com.hannesdorfmann.ason.stream.JsonToken;
 import com.hannesdorfmann.ason.stream.JsonWriter;
@@ -25,6 +26,8 @@ import java.io.Reader;
 import java.io.StringReader;
 import java.io.StringWriter;
 import java.io.Writer;
+import java.lang.reflect.Type;
+import java.util.List;
 
 /**
  * Converts Java objects to and from JSON.
@@ -103,6 +106,10 @@ import java.io.Writer;
 // instances of {@code Date}, but cannot convert any other types.
 //
 public abstract class TypeAdapter<T> {
+
+  public Type getListTypeToken(){
+    return new TypeToken<List<T>>(){}.getType();
+  }
 
   /**
    * Writes one JSON value (an array, object, string, number, boolean or null)

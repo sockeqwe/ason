@@ -13,6 +13,7 @@ import java.io.StringReader;
 import java.lang.reflect.Type;
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 /**
@@ -185,9 +186,15 @@ public class Ason {
     boolean oldLenient = reader.isLenient();
     reader.setLenient(true);
     try {
-      reader.peek();
+      JsonToken jsonBegin = reader.peek();
       isEmpty = false;
+
       TypeToken<T> typeToken = (TypeToken<T>) TypeToken.get(typeOfT);
+
+      //if (jsonBegin == JsonToken.BEGIN_ARRAY){
+      //  typeToken = TypeToken.get(getJsonArrayType());
+      //}
+
       TypeAdapter<T> typeAdapter = getAdapter(typeToken);
       T object = typeAdapter.read(reader, config);
       return object;
@@ -215,5 +222,9 @@ public class Ason {
   public <T> TypeAdapter<T> getAdapter(TypeToken<T> type) {
     TypeAdapter<?> cached = typeTokenCache.get(type);
     return (TypeAdapter<T>) cached;
+  }
+
+  private <T> Type getJsonArrayType(){
+    return new TypeToken<List<T>>(){}.getType();
   }
 }
