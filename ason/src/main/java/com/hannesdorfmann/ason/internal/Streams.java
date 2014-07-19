@@ -23,7 +23,6 @@ import java.io.Writer;
  * Reads and writes GSON parse trees over streams.
  */
 public final class Streams {
- 
 
   @SuppressWarnings("resource")
   public static Writer writerForAppendable(Appendable appendable) {
@@ -51,24 +50,29 @@ public final class Streams {
       appendable.append((char) i);
     }
 
-    @Override public void flush() {}
-    @Override public void close() {}
+    @Override public void flush() {
+    }
+
+    @Override public void close() {
+    }
 
     /**
      * A mutable char sequence pointing at a single char[].
      */
     static class CurrentWrite implements CharSequence {
       char[] chars;
+
       public int length() {
         return chars.length;
       }
+
       public char charAt(int i) {
         return chars[i];
       }
+
       public CharSequence subSequence(int start, int end) {
         return new String(chars, start, end - start);
       }
     }
   }
-
 }

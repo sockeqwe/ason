@@ -1,6 +1,7 @@
 package com.hannesdorfmann.ason.processor;
 
 import com.hannesdorfmann.ason.annotation.Json;
+import com.hannesdorfmann.ason.processor.generator.TypeAdapterGenerator;
 import java.io.PrintWriter;
 import java.util.LinkedHashSet;
 import java.util.Set;
@@ -14,7 +15,6 @@ import javax.lang.model.element.Element;
 import javax.lang.model.element.TypeElement;
 import javax.lang.model.util.Elements;
 import javax.lang.model.util.Types;
-import javax.tools.Diagnostic.Kind;
 
 /**
  * This is the default Ason annotation processor
@@ -53,6 +53,8 @@ public class AsonProcessor extends AbstractProcessor {
   @Override
   public boolean process(Set<? extends TypeElement> typeElements, RoundEnvironment roundEnv) {
 
+    ProcessorMessage.init(processingEnv);
+
     try {
       PrintWriter out = new PrintWriter("/Users/hannes/annotation.txt");
 
@@ -60,7 +62,9 @@ public class AsonProcessor extends AbstractProcessor {
 
         Json json = elem.getAnnotation(Json.class);
         String message = "annotation found in " + elem.getSimpleName();
-        processingEnv.getMessager().printMessage(Kind.WARNING, message);
+        ProcessorMessage.note(elem, message);
+
+        new TypeAdapterGenerator(roundEnv, elementUtils, typeUtils, filer).generateCode(elem);
 
         out.write(message + "\n");
       }
@@ -71,16 +75,5 @@ public class AsonProcessor extends AbstractProcessor {
     }
 
     return true; // no further processing of this annotation type
-  }
-
-  private String getPackageName(TypeElement type) {
-    return elementUtils.getPackageOf(type).getQualifiedName().toString();
-  }
-
-  private void error(Element element, String message, Object... args) {
-    if (args.length > 0) {
-      message = String.format(message, args);
-    }
-    processingEnv.getMessager().printMessage(Kind.ERROR, message, element);
   }
 }

@@ -28,8 +28,6 @@ import java.lang.reflect.Method;
  * @author Jesse Wilson
  */
 public abstract class UnsafeAllocator {
-  public abstract <T> T newInstance(Class<T> c) throws Exception;
-
   public static UnsafeAllocator create() {
     // try JVM
     // public class Unsafe {
@@ -42,8 +40,7 @@ public abstract class UnsafeAllocator {
       final Object unsafe = f.get(null);
       final Method allocateInstance = unsafeClass.getMethod("allocateInstance", Class.class);
       return new UnsafeAllocator() {
-        @Override
-        @SuppressWarnings("unchecked")
+        @Override @SuppressWarnings("unchecked")
         public <T> T newInstance(Class<T> c) throws Exception {
           return (T) allocateInstance.invoke(unsafe, c);
         }
@@ -57,12 +54,11 @@ public abstract class UnsafeAllocator {
     //     Class<?> instantiationClass, Class<?> constructorClass);
     // }
     try {
-      final Method newInstance = ObjectInputStream.class
-          .getDeclaredMethod("newInstance", Class.class, Class.class);
+      final Method newInstance =
+          ObjectInputStream.class.getDeclaredMethod("newInstance", Class.class, Class.class);
       newInstance.setAccessible(true);
       return new UnsafeAllocator() {
-        @Override
-        @SuppressWarnings("unchecked")
+        @Override @SuppressWarnings("unchecked")
         public <T> T newInstance(Class<T> c) throws Exception {
           return (T) newInstance.invoke(null, c, Object.class);
         }
@@ -76,16 +72,15 @@ public abstract class UnsafeAllocator {
     //   private static native Object newInstance(Class<?> instantiationClass, int methodId);
     // }
     try {
-      Method getConstructorId = ObjectStreamClass.class
-          .getDeclaredMethod("getConstructorId", Class.class);
+      Method getConstructorId =
+          ObjectStreamClass.class.getDeclaredMethod("getConstructorId", Class.class);
       getConstructorId.setAccessible(true);
       final int constructorId = (Integer) getConstructorId.invoke(null, Object.class);
-      final Method newInstance = ObjectStreamClass.class
-          .getDeclaredMethod("newInstance", Class.class, int.class);
+      final Method newInstance =
+          ObjectStreamClass.class.getDeclaredMethod("newInstance", Class.class, int.class);
       newInstance.setAccessible(true);
       return new UnsafeAllocator() {
-        @Override
-        @SuppressWarnings("unchecked")
+        @Override @SuppressWarnings("unchecked")
         public <T> T newInstance(Class<T> c) throws Exception {
           return (T) newInstance.invoke(null, c, constructorId);
         }
@@ -101,4 +96,6 @@ public abstract class UnsafeAllocator {
       }
     };
   }
+
+  public abstract <T> T newInstance(Class<T> c) throws Exception;
 }

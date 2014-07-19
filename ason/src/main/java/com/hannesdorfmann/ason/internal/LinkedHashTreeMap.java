@@ -44,13 +44,14 @@ public final class LinkedHashTreeMap<K, V> extends AbstractMap<K, V> implements 
       return a.compareTo(b);
     }
   };
-
+  final Node<K, V> header;
   Comparator<? super K> comparator;
   Node<K, V>[] table;
-  final Node<K, V> header;
   int size = 0;
   int modCount = 0;
   int threshold;
+  private EntrySet entrySet;
+  private KeySet keySet;
 
   /**
    * Create a natural order, empty tree map whose keys must be mutually
@@ -66,16 +67,78 @@ public final class LinkedHashTreeMap<K, V> extends AbstractMap<K, V> implements 
    * be null if {@code comparator} permits.
    *
    * @param comparator the comparator to order elements with, or {@code null} to
-   *     use the natural ordering.
+   * use the natural ordering.
    */
-  @SuppressWarnings({ "unchecked", "rawtypes" }) // unsafe! if comparator is null, this assumes K is comparable
+  @SuppressWarnings({ "unchecked", "rawtypes" })
+  // unsafe! if comparator is null, this assumes K is comparable
   public LinkedHashTreeMap(Comparator<? super K> comparator) {
-    this.comparator = comparator != null
-        ? comparator
-        : (Comparator) NATURAL_ORDER;
+    this.comparator = comparator != null ? comparator : (Comparator) NATURAL_ORDER;
     this.header = new Node<K, V>();
     this.table = new Node[16]; // TODO: sizing/resizing policies
     this.threshold = (table.length / 2) + (table.length / 4); // 3/4 capacity
+  }
+
+  /**
+   * Applies a supplemental hash function to a given hashCode, which defends
+   * against poor quality hash functions. This is critical because HashMap
+   * uses power-of-two length hash tables, that otherwise encounter collisions
+   * for hashCodes that do not differ in lower or upper bits.
+   */
+  private static int secondaryHash(int h) {
+    // Doug Lea's supplemental hash function
+    h ^= (h >>> 20) ^ (h >>> 12);
+    return h ^ (h >>> 7) ^ (h >>> 4);
+  }
+
+  /**
+   * Returns a new array containing the same nodes as {@code oldTable}, but with
+   * twice as many trees, each of (approximately) half the previous size.
+   */
+  static <K, V> Node<K, V>[] doubleCapacity(Node<K, V>[] oldTable) {
+    // TODO: don't do anything if we're already at MAX_CAPACITY
+    int oldCapacity = oldTable.length;
+    @SuppressWarnings("unchecked") // Arrays and generics don't get along.
+        Node<K, V>[] newTable = new Node[oldCapacity * 2];
+    AvlIterator<K, V> iterator = new AvlIterator<K, V>();
+    AvlBuilder<K, V> leftBuilder = new AvlBuilder<K, V>();
+    AvlBuilder<K, V> rightBuilder = new AvlBuilder<K, V>();
+
+    // Split each tree into two trees.
+    for (int i = 0; i < oldCapacity; i++) {
+      Node<K, V> root = oldTable[i];
+      if (root == null) {
+        continue;
+      }
+
+      // Compute the sizes of the left and right trees.
+      iterator.reset(root);
+      int leftSize = 0;
+      int rightSize = 0;
+      for (Node<K, V> node; (node = iterator.next()) != null; ) {
+        if ((node.hash & oldCapacity) == 0) {
+          leftSize++;
+        } else {
+          rightSize++;
+        }
+      }
+
+      // Split the tree into two.
+      leftBuilder.reset(leftSize);
+      rightBuilder.reset(rightSize);
+      iterator.reset(root);
+      for (Node<K, V> node; (node = iterator.next()) != null; ) {
+        if ((node.hash & oldCapacity) == 0) {
+          leftBuilder.add(node);
+        } else {
+          rightBuilder.add(node);
+        }
+      }
+
+      // Populate the enlarged array with these new roots.
+      newTable[i] = leftSize > 0 ? leftBuilder.root() : null;
+      newTable[i + oldCapacity] = rightSize > 0 ? rightBuilder.root() : null;
+    }
+    return newTable;
   }
 
   @Override public int size() {
@@ -126,7 +189,7 @@ public final class LinkedHashTreeMap<K, V> extends AbstractMap<K, V> implements 
    * Returns the node at or adjacent to the given key, creating it if requested.
    *
    * @throws ClassCastException if {@code key} and the tree's keys aren't
-   *     mutually comparable.
+   * mutually comparable.
    */
   Node<K, V> find(K key, boolean create) {
     Comparator<? super K> comparator = this.comparator;
@@ -139,13 +202,11 @@ public final class LinkedHashTreeMap<K, V> extends AbstractMap<K, V> implements 
     if (nearest != null) {
       // Micro-optimization: avoid polymorphic calls to Comparator.compare().
       @SuppressWarnings("unchecked") // Throws a ClassCastException below if there's trouble.
-          Comparable<Object> comparableKey = (comparator == NATURAL_ORDER)
-          ? (Comparable<Object>) key
-          : null;
+          Comparable<Object> comparableKey =
+          (comparator == NATURAL_ORDER) ? (Comparable<Object>) key : null;
 
       while (true) {
-        comparison = (comparableKey != null)
-            ? comparableKey.compareTo(nearest.key)
+        comparison = (comparableKey != null) ? comparableKey.compareTo(nearest.key)
             : comparator.compare(key, nearest.key);
 
         // We found the requested key.
@@ -196,8 +257,7 @@ public final class LinkedHashTreeMap<K, V> extends AbstractMap<K, V> implements 
     return created;
   }
 
-  @SuppressWarnings("unchecked")
-  Node<K, V> findByObject(Object key) {
+  @SuppressWarnings("unchecked") Node<K, V> findByObject(Object key) {
     try {
       return key != null ? find((K) key, false) : null;
     } catch (ClassCastException e) {
@@ -222,18 +282,6 @@ public final class LinkedHashTreeMap<K, V> extends AbstractMap<K, V> implements 
 
   private boolean equal(Object a, Object b) {
     return a == b || (a != null && a.equals(b));
-  }
-
-  /**
-   * Applies a supplemental hash function to a given hashCode, which defends
-   * against poor quality hash functions. This is critical because HashMap
-   * uses power-of-two length hash tables, that otherwise encounter collisions
-   * for hashCodes that do not differ in lower or upper bits.
-   */
-  private static int secondaryHash(int h) {
-    // Doug Lea's supplemental hash function
-    h ^= (h >>> 20) ^ (h >>> 12);
-    return h ^ (h >>> 7) ^ (h >>> 4);
   }
 
   /**
@@ -333,7 +381,7 @@ public final class LinkedHashTreeMap<K, V> extends AbstractMap<K, V> implements 
    * newly-unbalanced node and the tree's root.
    *
    * @param insert true if the node was unbalanced by an insert; false if it
-   *     was by a removal.
+   * was by a removal.
    */
   private void rebalance(Node<K, V> unbalanced, boolean insert) {
     for (Node<K, V> node = unbalanced; node != null; node = node.parent) {
@@ -360,7 +408,6 @@ public final class LinkedHashTreeMap<K, V> extends AbstractMap<K, V> implements 
         if (insert) {
           break; // no further rotations will be necessary
         }
-
       } else if (delta == 2) {
         Node<K, V> leftLeft = left.left;
         Node<K, V> leftRight = left.right;
@@ -378,13 +425,11 @@ public final class LinkedHashTreeMap<K, V> extends AbstractMap<K, V> implements 
         if (insert) {
           break; // no further rotations will be necessary
         }
-
       } else if (delta == 0) {
         node.height = leftHeight + 1; // leftHeight == rightHeight
         if (insert) {
           break; // the insert caused balance, so rebalancing is done!
         }
-
       } else {
         assert (delta == -1 || delta == 1);
         node.height = Math.max(leftHeight, rightHeight) + 1;
@@ -417,7 +462,8 @@ public final class LinkedHashTreeMap<K, V> extends AbstractMap<K, V> implements 
     root.parent = pivot;
 
     // fix heights
-    root.height = Math.max(left != null ? left.height : 0, pivotLeft != null ? pivotLeft.height : 0) + 1;
+    root.height =
+        Math.max(left != null ? left.height : 0, pivotLeft != null ? pivotLeft.height : 0) + 1;
     pivot.height = Math.max(root.height, pivotRight != null ? pivotRight.height : 0) + 1;
   }
 
@@ -443,13 +489,10 @@ public final class LinkedHashTreeMap<K, V> extends AbstractMap<K, V> implements 
     root.parent = pivot;
 
     // fixup heights
-    root.height = Math.max(right != null ? right.height : 0,
-        pivotRight != null ? pivotRight.height : 0) + 1;
+    root.height =
+        Math.max(right != null ? right.height : 0, pivotRight != null ? pivotRight.height : 0) + 1;
     pivot.height = Math.max(root.height, pivotLeft != null ? pivotLeft.height : 0) + 1;
   }
-
-  private EntrySet entrySet;
-  private KeySet keySet;
 
   @Override public Set<Entry<K, V>> entrySet() {
     EntrySet result = entrySet;
@@ -461,14 +504,29 @@ public final class LinkedHashTreeMap<K, V> extends AbstractMap<K, V> implements 
     return result != null ? result : (keySet = new KeySet());
   }
 
+  private void doubleCapacity() {
+    table = doubleCapacity(table);
+    threshold = (table.length / 2) + (table.length / 4); // 3/4 capacity
+  }
+
+  /**
+   * If somebody is unlucky enough to have to serialize one of these, serialize
+   * it as a LinkedHashMap so that they won't need Gson on the other side to
+   * deserialize it. Using serialization defeats our DoS defence, so most apps
+   * shouldn't use it.
+   */
+  private Object writeReplace() throws ObjectStreamException {
+    return new LinkedHashMap<K, V>(this);
+  }
+
   static final class Node<K, V> implements Entry<K, V> {
+    final K key;
+    final int hash;
     Node<K, V> parent;
     Node<K, V> left;
     Node<K, V> right;
     Node<K, V> next;
     Node<K, V> prev;
-    final K key;
-    final int hash;
     V value;
     int height;
 
@@ -505,19 +563,17 @@ public final class LinkedHashTreeMap<K, V> extends AbstractMap<K, V> implements 
       return oldValue;
     }
 
-    @SuppressWarnings("rawtypes")
-    @Override public boolean equals(Object o) {
+    @SuppressWarnings("rawtypes") @Override public boolean equals(Object o) {
       if (o instanceof Entry) {
         Entry other = (Entry) o;
-        return (key == null ? other.getKey() == null : key.equals(other.getKey()))
-            && (value == null ? other.getValue() == null : value.equals(other.getValue()));
+        return (key == null ? other.getKey() == null : key.equals(other.getKey())) && (value == null
+            ? other.getValue() == null : value.equals(other.getValue()));
       }
       return false;
     }
 
     @Override public int hashCode() {
-      return (key == null ? 0 : key.hashCode())
-          ^ (value == null ? 0 : value.hashCode());
+      return (key == null ? 0 : key.hashCode()) ^ (value == null ? 0 : value.hashCode());
     }
 
     @Override public String toString() {
@@ -549,62 +605,6 @@ public final class LinkedHashTreeMap<K, V> extends AbstractMap<K, V> implements 
       }
       return node;
     }
-  }
-
-  private void doubleCapacity() {
-    table = doubleCapacity(table);
-    threshold = (table.length / 2) + (table.length / 4); // 3/4 capacity
-  }
-
-  /**
-   * Returns a new array containing the same nodes as {@code oldTable}, but with
-   * twice as many trees, each of (approximately) half the previous size.
-   */
-  static <K, V> Node<K, V>[] doubleCapacity(Node<K, V>[] oldTable) {
-    // TODO: don't do anything if we're already at MAX_CAPACITY
-    int oldCapacity = oldTable.length;
-    @SuppressWarnings("unchecked") // Arrays and generics don't get along.
-    Node<K, V>[] newTable = new Node[oldCapacity * 2];
-    AvlIterator<K, V> iterator = new AvlIterator<K, V>();
-    AvlBuilder<K, V> leftBuilder = new AvlBuilder<K, V>();
-    AvlBuilder<K, V> rightBuilder = new AvlBuilder<K, V>();
-
-    // Split each tree into two trees.
-    for (int i = 0; i < oldCapacity; i++) {
-      Node<K, V> root = oldTable[i];
-      if (root == null) {
-        continue;
-      }
-
-      // Compute the sizes of the left and right trees.
-      iterator.reset(root);
-      int leftSize = 0;
-      int rightSize = 0;
-      for (Node<K, V> node; (node = iterator.next()) != null; ) {
-        if ((node.hash & oldCapacity) == 0) {
-          leftSize++;
-        } else {
-          rightSize++;
-        }
-      }
-
-      // Split the tree into two.
-      leftBuilder.reset(leftSize);
-      rightBuilder.reset(rightSize);
-      iterator.reset(root);
-      for (Node<K, V> node; (node = iterator.next()) != null; ) {
-        if ((node.hash & oldCapacity) == 0) {
-          leftBuilder.add(node);
-        } else {
-          rightBuilder.add(node);
-        }
-      }
-
-      // Populate the enlarged array with these new roots.
-      newTable[i] = leftSize > 0 ? leftBuilder.root() : null;
-      newTable[i + oldCapacity] = rightSize > 0 ? rightBuilder.root() : null;
-    }
-    return newTable;
   }
 
   /**
@@ -650,9 +650,9 @@ public final class LinkedHashTreeMap<K, V> extends AbstractMap<K, V> implements 
    * Builds AVL trees of a predetermined size by accepting nodes of increasing
    * value. To use:
    * <ol>
-   *   <li>Call {@link #reset} to initialize the target size <i>size</i>.
-   *   <li>Call {@link #add} <i>size</i> times with increasing values.
-   *   <li>Call {@link #root} to get the root of the balanced tree.
+   * <li>Call {@link #reset} to initialize the target size <i>size</i>.
+   * <li>Call {@link #add} <i>size</i> times with increasing values.
+   * <li>Call {@link #root} to get the root of the balanced tree.
    * </ol>
    *
    * <p>The returned tree will satisfy the AVL constraint: for every node
@@ -757,7 +757,6 @@ public final class LinkedHashTreeMap<K, V> extends AbstractMap<K, V> implements 
   private abstract class LinkedTreeMapIterator<T> implements Iterator<T> {
     Node<K, V> next = header.next;
     Node<K, V> lastReturned = null;
-    int expectedModCount = modCount;
 
     public final boolean hasNext() {
       return next != header;
@@ -773,7 +772,7 @@ public final class LinkedHashTreeMap<K, V> extends AbstractMap<K, V> implements 
       }
       next = e.next;
       return lastReturned = e;
-    }
+    }    int expectedModCount = modCount;
 
     public final void remove() {
       if (lastReturned == null) {
@@ -783,6 +782,8 @@ public final class LinkedHashTreeMap<K, V> extends AbstractMap<K, V> implements 
       lastReturned = null;
       expectedModCount = modCount;
     }
+
+
   }
 
   final class EntrySet extends AbstractSet<Entry<K, V>> {
@@ -844,15 +845,5 @@ public final class LinkedHashTreeMap<K, V> extends AbstractMap<K, V> implements 
     @Override public void clear() {
       LinkedHashTreeMap.this.clear();
     }
-  }
-
-  /**
-   * If somebody is unlucky enough to have to serialize one of these, serialize
-   * it as a LinkedHashMap so that they won't need Gson on the other side to
-   * deserialize it. Using serialization defeats our DoS defence, so most apps
-   * shouldn't use it.
-   */
-  private Object writeReplace() throws ObjectStreamException {
-    return new LinkedHashMap<K, V>(this);
   }
 }

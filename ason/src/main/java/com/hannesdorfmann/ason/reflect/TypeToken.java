@@ -67,8 +67,7 @@ public class TypeToken<T> {
   /**
    * Unsafe. Constructs a type literal manually.
    */
-  @SuppressWarnings("unchecked")
-  TypeToken(Type type) {
+  @SuppressWarnings("unchecked") TypeToken(Type type) {
     this.type = $Gson$Types.canonicalize($Gson$Preconditions.checkNotNull(type));
     this.rawType = (Class<? super T>) $Gson$Types.getRawType(this.type);
     this.hashCode = this.type.hashCode();
@@ -85,72 +84,6 @@ public class TypeToken<T> {
     }
     ParameterizedType parameterized = (ParameterizedType) superclass;
     return $Gson$Types.canonicalize(parameterized.getActualTypeArguments()[0]);
-  }
-
-  /**
-   * Returns the raw (non-generic) type for this type.
-   */
-  public final Class<? super T> getRawType() {
-    return rawType;
-  }
-
-  /**
-   * Gets underlying {@code Type} instance.
-   */
-  public final Type getType() {
-    return type;
-  }
-
-  /**
-   * Check if this type is assignable from the given class object.
-   *
-   * @deprecated this implementation may be inconsistent with javac for types
-   *     with wildcards.
-   */
-  @Deprecated
-  public boolean isAssignableFrom(Class<?> cls) {
-    return isAssignableFrom((Type) cls);
-  }
-
-  /**
-   * Check if this type is assignable from the given Type.
-   *
-   * @deprecated this implementation may be inconsistent with javac for types
-   *     with wildcards.
-   */
-  @Deprecated
-  public boolean isAssignableFrom(Type from) {
-    if (from == null) {
-      return false;
-    }
-
-    if (type.equals(from)) {
-      return true;
-    }
-
-    if (type instanceof Class<?>) {
-      return rawType.isAssignableFrom($Gson$Types.getRawType(from));
-    } else if (type instanceof ParameterizedType) {
-      return isAssignableFrom(from, (ParameterizedType) type,
-          new HashMap<String, Type>());
-    } else if (type instanceof GenericArrayType) {
-      return rawType.isAssignableFrom($Gson$Types.getRawType(from))
-          && isAssignableFrom(from, (GenericArrayType) type);
-    } else {
-      throw buildUnexpectedTypeError(
-          type, Class.class, ParameterizedType.class, GenericArrayType.class);
-    }
-  }
-
-  /**
-   * Check if this type is assignable from the given type token.
-   *
-   * @deprecated this implementation may be inconsistent with javac for types
-   *     with wildcards.
-   */
-  @Deprecated
-  public boolean isAssignableFrom(TypeToken<?> token) {
-    return isAssignableFrom(token.getType());
   }
 
   /**
@@ -235,8 +168,8 @@ public class TypeToken<T> {
    * Checks if two parameterized types are exactly equal, under the variable
    * replacement described in the typeVarMap.
    */
-  private static boolean typeEquals(ParameterizedType from,
-      ParameterizedType to, Map<String, Type> typeVarMap) {
+  private static boolean typeEquals(ParameterizedType from, ParameterizedType to,
+      Map<String, Type> typeVarMap) {
     if (from.getRawType().equals(to.getRawType())) {
       Type[] fromArgs = from.getActualTypeArguments();
       Type[] toArgs = to.getActualTypeArguments();
@@ -250,17 +183,18 @@ public class TypeToken<T> {
     return false;
   }
 
-  private static AssertionError buildUnexpectedTypeError(
-      Type token, Class<?>... expected) {
+  private static AssertionError buildUnexpectedTypeError(Type token, Class<?>... expected) {
 
     // Build exception message
-    StringBuilder exceptionMessage =
-        new StringBuilder("Unexpected type. Expected one of: ");
+    StringBuilder exceptionMessage = new StringBuilder("Unexpected type. Expected one of: ");
     for (Class<?> clazz : expected) {
       exceptionMessage.append(clazz.getName()).append(", ");
     }
-    exceptionMessage.append("but got: ").append(token.getClass().getName())
-        .append(", for type token: ").append(token.toString()).append('.');
+    exceptionMessage.append("but got: ")
+        .append(token.getClass().getName())
+        .append(", for type token: ")
+        .append(token.toString())
+        .append('.');
 
     return new AssertionError(exceptionMessage.toString());
   }
@@ -270,23 +204,8 @@ public class TypeToken<T> {
    * given in the type map that was provided.
    */
   private static boolean matches(Type from, Type to, Map<String, Type> typeMap) {
-    return to.equals(from)
-        || (from instanceof TypeVariable
-        && to.equals(typeMap.get(((TypeVariable<?>) from).getName())));
-
-  }
-
-  @Override public final int hashCode() {
-    return this.hashCode;
-  }
-
-  @Override public final boolean equals(Object o) {
-    return o instanceof TypeToken<?>
-        && $Gson$Types.equals(type, ((TypeToken<?>) o).type);
-  }
-
-  @Override public final String toString() {
-    return $Gson$Types.typeToString(type);
+    return to.equals(from) || (from instanceof TypeVariable && to.equals(
+        typeMap.get(((TypeVariable<?>) from).getName())));
   }
 
   /**
@@ -301,5 +220,82 @@ public class TypeToken<T> {
    */
   public static <T> TypeToken<T> get(Class<T> type) {
     return new TypeToken<T>(type);
+  }
+
+  /**
+   * Returns the raw (non-generic) type for this type.
+   */
+  public final Class<? super T> getRawType() {
+    return rawType;
+  }
+
+  /**
+   * Gets underlying {@code Type} instance.
+   */
+  public final Type getType() {
+    return type;
+  }
+
+  /**
+   * Check if this type is assignable from the given class object.
+   *
+   * @deprecated this implementation may be inconsistent with javac for types
+   * with wildcards.
+   */
+  @Deprecated
+  public boolean isAssignableFrom(Class<?> cls) {
+    return isAssignableFrom((Type) cls);
+  }
+
+  /**
+   * Check if this type is assignable from the given Type.
+   *
+   * @deprecated this implementation may be inconsistent with javac for types
+   * with wildcards.
+   */
+  @Deprecated
+  public boolean isAssignableFrom(Type from) {
+    if (from == null) {
+      return false;
+    }
+
+    if (type.equals(from)) {
+      return true;
+    }
+
+    if (type instanceof Class<?>) {
+      return rawType.isAssignableFrom($Gson$Types.getRawType(from));
+    } else if (type instanceof ParameterizedType) {
+      return isAssignableFrom(from, (ParameterizedType) type, new HashMap<String, Type>());
+    } else if (type instanceof GenericArrayType) {
+      return rawType.isAssignableFrom($Gson$Types.getRawType(from)) && isAssignableFrom(from,
+          (GenericArrayType) type);
+    } else {
+      throw buildUnexpectedTypeError(type, Class.class, ParameterizedType.class,
+          GenericArrayType.class);
+    }
+  }
+
+  /**
+   * Check if this type is assignable from the given type token.
+   *
+   * @deprecated this implementation may be inconsistent with javac for types
+   * with wildcards.
+   */
+  @Deprecated
+  public boolean isAssignableFrom(TypeToken<?> token) {
+    return isAssignableFrom(token.getType());
+  }
+
+  @Override public final int hashCode() {
+    return this.hashCode;
+  }
+
+  @Override public final boolean equals(Object o) {
+    return o instanceof TypeToken<?> && $Gson$Types.equals(type, ((TypeToken<?>) o).type);
+  }
+
+  @Override public final String toString() {
+    return $Gson$Types.typeToString(type);
   }
 }

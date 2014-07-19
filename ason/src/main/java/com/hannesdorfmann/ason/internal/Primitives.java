@@ -16,7 +16,6 @@
 
 package com.hannesdorfmann.ason.internal;
 
-
 import java.lang.reflect.Type;
 import java.util.Collections;
 import java.util.HashMap;
@@ -29,15 +28,10 @@ import java.util.Map;
  * @author Kevin Bourrillion
  */
 public final class Primitives {
-  private Primitives() {}
-
   /** A map from primitive types to their corresponding wrapper types. */
   private static final Map<Class<?>, Class<?>> PRIMITIVE_TO_WRAPPER_TYPE;
-
   /** A map from wrapper types to their corresponding primitive types. */
   private static final Map<Class<?>, Class<?>> WRAPPER_TO_PRIMITIVE_TYPE;
-
-  // Sad that we can't use a BiMap. :(
 
   static {
     Map<Class<?>, Class<?>> primToWrap = new HashMap<Class<?>, Class<?>>(16);
@@ -57,8 +51,13 @@ public final class Primitives {
     WRAPPER_TO_PRIMITIVE_TYPE = Collections.unmodifiableMap(wrapToPrim);
   }
 
-  private static void add(Map<Class<?>, Class<?>> forward,
-      Map<Class<?>, Class<?>> backward, Class<?> key, Class<?> value) {
+  // Sad that we can't use a BiMap. :(
+
+  private Primitives() {
+  }
+
+  private static void add(Map<Class<?>, Class<?>> forward, Map<Class<?>, Class<?>> backward,
+      Class<?> key, Class<?> value) {
     forward.put(key, value);
     backward.put(value, key);
   }
@@ -77,8 +76,7 @@ public final class Primitives {
    * @see Class#isPrimitive
    */
   public static boolean isWrapperType(Type type) {
-    return WRAPPER_TO_PRIMITIVE_TYPE.containsKey(
-        $Gson$Preconditions.checkNotNull(type));
+    return WRAPPER_TO_PRIMITIVE_TYPE.containsKey($Gson$Preconditions.checkNotNull(type));
   }
 
   /**
@@ -92,8 +90,8 @@ public final class Primitives {
    */
   public static <T> Class<T> wrap(Class<T> type) {
     // cast is safe: long.class and Long.class are both of type Class<Long>
-    @SuppressWarnings("unchecked") Class<T> wrapped = (Class<T>) PRIMITIVE_TO_WRAPPER_TYPE.get(
-        $Gson$Preconditions.checkNotNull(type));
+    @SuppressWarnings("unchecked") Class<T> wrapped =
+        (Class<T>) PRIMITIVE_TO_WRAPPER_TYPE.get($Gson$Preconditions.checkNotNull(type));
     return (wrapped == null) ? type : wrapped;
   }
 
@@ -108,8 +106,8 @@ public final class Primitives {
    */
   public static <T> Class<T> unwrap(Class<T> type) {
     // cast is safe: long.class and Long.class are both of type Class<Long>
-    @SuppressWarnings("unchecked") Class<T> unwrapped = (Class<T>) WRAPPER_TO_PRIMITIVE_TYPE.get(
-        $Gson$Preconditions.checkNotNull(type));
+    @SuppressWarnings("unchecked") Class<T> unwrapped =
+        (Class<T>) WRAPPER_TO_PRIMITIVE_TYPE.get($Gson$Preconditions.checkNotNull(type));
     return (unwrapped == null) ? type : unwrapped;
   }
 }

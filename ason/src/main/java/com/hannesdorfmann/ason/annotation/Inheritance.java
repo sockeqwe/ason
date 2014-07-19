@@ -9,13 +9,13 @@ import java.lang.annotation.Target;
 /**
  * Indicates that the annotated property is responsible to determine the subclass.
  * An example is shown in the docs of {@link Subclass}
- * @see Subclass
+ *
  * @author Hannes Dorfmann
+ * @see Subclass
  */
 @Target(value = { ElementType.TYPE, ElementType.METHOD }) @Retention(RetentionPolicy.CLASS)
 @Documented
 public @interface Inheritance {
 
   Subclass[] value();
-
 }

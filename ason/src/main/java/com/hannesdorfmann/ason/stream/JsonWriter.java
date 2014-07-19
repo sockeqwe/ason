@@ -41,15 +41,15 @@ import static com.hannesdorfmann.ason.stream.JsonScope.NONEMPTY_OBJECT;
  * writer as you walk the structure's contents, nesting arrays and objects as
  * necessary:
  * <ul>
- *   <li>To write <strong>arrays</strong>, first call {@link #beginArray()}.
- *       Write each of the array's elements with the appropriate {@link #value}
- *       methods or by nesting other arrays and objects. Finally close the array
- *       using {@link #endArray()}.
- *   <li>To write <strong>objects</strong>, first call {@link #beginObject()}.
- *       Write each of the object's properties by alternating calls to
- *       {@link #name} with the property's value. Write property values with the
- *       appropriate {@link #value} method or by nesting other objects or arrays.
- *       Finally close the object using {@link #endObject()}.
+ * <li>To write <strong>arrays</strong>, first call {@link #beginArray()}.
+ * Write each of the array's elements with the appropriate {@link #value}
+ * methods or by nesting other arrays and objects. Finally close the array
+ * using {@link #endArray()}.
+ * <li>To write <strong>objects</strong>, first call {@link #beginObject()}.
+ * Write each of the object's properties by alternating calls to
+ * {@link #name} with the property's value. Write property values with the
+ * appropriate {@link #value} method or by nesting other objects or arrays.
+ * Finally close the object using {@link #endObject()}.
  * </ul>
  *
  * <h3>Example</h3>
@@ -141,6 +141,7 @@ public class JsonWriter implements Closeable, Flushable {
    */
   private static final String[] REPLACEMENT_CHARS;
   private static final String[] HTML_SAFE_REPLACEMENT_CHARS;
+
   static {
     REPLACEMENT_CHARS = new String[128];
     for (int i = 0; i <= 0x1f; i++) {
@@ -166,6 +167,7 @@ public class JsonWriter implements Closeable, Flushable {
 
   private int[] stack = new int[32];
   private int stackSize = 0;
+
   {
     push(EMPTY_DOCUMENT);
   }
@@ -220,15 +222,22 @@ public class JsonWriter implements Closeable, Flushable {
   }
 
   /**
+   * Returns true if this writer has relaxed syntax rules.
+   */
+  public boolean isLenient() {
+    return lenient;
+  }
+
+  /**
    * Configure this writer to relax its syntax rules. By default, this writer
    * only emits well-formed JSON as specified by <a
    * href="http://www.ietf.org/rfc/rfc4627.txt">RFC 4627</a>. Setting the writer
    * to lenient permits the following:
    * <ul>
-   *   <li>Top-level values of any type. With strict writing, the top-level
-   *       value must be an object or an array.
-   *   <li>Numbers may be {@link Double#isNaN() NaNs} or {@link
-   *       Double#isInfinite() infinities}.
+   * <li>Top-level values of any type. With strict writing, the top-level
+   * value must be an object or an array.
+   * <li>Numbers may be {@link Double#isNaN() NaNs} or {@link
+   * Double#isInfinite() infinities}.
    * </ul>
    */
   public final void setLenient(boolean lenient) {
@@ -236,10 +245,11 @@ public class JsonWriter implements Closeable, Flushable {
   }
 
   /**
-   * Returns true if this writer has relaxed syntax rules.
+   * Returns true if this writer writes JSON that's safe for inclusion in HTML
+   * and XML documents.
    */
-  public boolean isLenient() {
-    return lenient;
+  public final boolean isHtmlSafe() {
+    return htmlSafe;
   }
 
   /**
@@ -254,11 +264,11 @@ public class JsonWriter implements Closeable, Flushable {
   }
 
   /**
-   * Returns true if this writer writes JSON that's safe for inclusion in HTML
-   * and XML documents.
+   * Returns true if object members are serialized when their value is null.
+   * This has no impact on array elements. The default is true.
    */
-  public final boolean isHtmlSafe() {
-    return htmlSafe;
+  public final boolean getSerializeNulls() {
+    return serializeNulls;
   }
 
   /**
@@ -267,14 +277,6 @@ public class JsonWriter implements Closeable, Flushable {
    */
   public final void setSerializeNulls(boolean serializeNulls) {
     this.serializeNulls = serializeNulls;
-  }
-
-  /**
-   * Returns true if object members are serialized when their value is null.
-   * This has no impact on array elements. The default is true.
-   */
-  public final boolean getSerializeNulls() {
-    return serializeNulls;
   }
 
   /**
@@ -332,8 +334,7 @@ public class JsonWriter implements Closeable, Flushable {
    * Closes the current scope by appending any necessary whitespace and the
    * given bracket.
    */
-  private JsonWriter close(int empty, int nonempty, String closeBracket)
-      throws IOException {
+  private JsonWriter close(int empty, int nonempty, String closeBracket) throws IOException {
     int context = peek();
     if (context != nonempty && context != empty) {
       throw new IllegalStateException("Nesting problem.");
@@ -455,7 +456,7 @@ public class JsonWriter implements Closeable, Flushable {
    * Encodes {@code value}.
    *
    * @param value a finite value. May not be {@link Double#isNaN() NaNs} or
-   *     {@link Double#isInfinite() infinities}.
+   * {@link Double#isInfinite() infinities}.
    * @return this writer.
    */
   public JsonWriter value(double value) throws IOException {
@@ -484,7 +485,7 @@ public class JsonWriter implements Closeable, Flushable {
    * Encodes {@code value}.
    *
    * @param value a finite value. May not be {@link Double#isNaN() NaNs} or
-   *     {@link Double#isInfinite() infinities}.
+   * {@link Double#isInfinite() infinities}.
    * @return this writer.
    */
   public JsonWriter value(Number value) throws IOException {
@@ -494,8 +495,8 @@ public class JsonWriter implements Closeable, Flushable {
 
     writeDeferredName();
     String string = value.toString();
-    if (!lenient
-        && (string.equals("-Infinity") || string.equals("Infinity") || string.equals("NaN"))) {
+    if (!lenient && (string.equals("-Infinity") || string.equals("Infinity") || string.equals(
+        "NaN"))) {
       throw new IllegalArgumentException("Numeric values must be finite, but was " + value);
     }
     beforeValue(false);
@@ -593,42 +594,40 @@ public class JsonWriter implements Closeable, Flushable {
    * closing bracket or another element.
    *
    * @param root true if the value is a new array or object, the two values
-   *     permitted as top-level elements.
+   * permitted as top-level elements.
    */
   @SuppressWarnings("fallthrough")
   private void beforeValue(boolean root) throws IOException {
     switch (peek()) {
-    case NONEMPTY_DOCUMENT:
-      if (!lenient) {
-        throw new IllegalStateException(
-            "JSON must have only one top-level value.");
-      }
-      // fall-through
-    case EMPTY_DOCUMENT: // first in document
-      if (!lenient && !root) {
-        throw new IllegalStateException(
-            "JSON must start with an array or an object.");
-      }
-      replaceTop(NONEMPTY_DOCUMENT);
-      break;
+      case NONEMPTY_DOCUMENT:
+        if (!lenient) {
+          throw new IllegalStateException("JSON must have only one top-level value.");
+        }
+        // fall-through
+      case EMPTY_DOCUMENT: // first in document
+        if (!lenient && !root) {
+          throw new IllegalStateException("JSON must start with an array or an object.");
+        }
+        replaceTop(NONEMPTY_DOCUMENT);
+        break;
 
-    case EMPTY_ARRAY: // first in array
-      replaceTop(NONEMPTY_ARRAY);
-      newline();
-      break;
+      case EMPTY_ARRAY: // first in array
+        replaceTop(NONEMPTY_ARRAY);
+        newline();
+        break;
 
-    case NONEMPTY_ARRAY: // another in array
-      out.append(',');
-      newline();
-      break;
+      case NONEMPTY_ARRAY: // another in array
+        out.append(',');
+        newline();
+        break;
 
-    case DANGLING_NAME: // value for name
-      out.append(separator);
-      replaceTop(NONEMPTY_OBJECT);
-      break;
+      case DANGLING_NAME: // value for name
+        out.append(separator);
+        replaceTop(NONEMPTY_OBJECT);
+        break;
 
-    default:
-      throw new IllegalStateException("Nesting problem.");
+      default:
+        throw new IllegalStateException("Nesting problem.");
     }
   }
 }

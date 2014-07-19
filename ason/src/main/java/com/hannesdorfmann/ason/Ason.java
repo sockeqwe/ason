@@ -217,14 +217,13 @@ public class Ason {
     }
   }
 
-
-
   public <T> TypeAdapter<T> getAdapter(TypeToken<T> type) {
     TypeAdapter<?> cached = typeTokenCache.get(type);
     return (TypeAdapter<T>) cached;
   }
 
-  private <T> Type getJsonArrayType(){
-    return new TypeToken<List<T>>(){}.getType();
+  private <T> Type getJsonArrayType() {
+    return new TypeToken<List<T>>() {
+     }.getType();
   }
 }

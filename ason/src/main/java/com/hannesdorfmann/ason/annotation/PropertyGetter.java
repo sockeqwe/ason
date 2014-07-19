@@ -1,6 +1,5 @@
 package com.hannesdorfmann.ason.annotation;
 
-import com.hannesdorfmann.ason.Config;
 import java.lang.annotation.Documented;
 import java.lang.annotation.ElementType;
 import java.lang.annotation.Retention;
@@ -17,17 +16,13 @@ import java.lang.annotation.Target;
  *
  * @author Hannes Dorfmann
  */
-@Target(value = { ElementType.TYPE }) @Retention(RetentionPolicy.CLASS)
+@Target(value = { ElementType.METHOD }) @Retention(RetentionPolicy.CLASS)
 @Documented
-public @interface Property {
+public @interface PropertyGetter {
 
   /**
    * The name of the json property. If not specified (empty string), the field name will be used.
    */
   String value() default "";
 
-  /**
-   * @see com.hannesdorfmann.ason.Config#jsonPropertyRequired
-   */
-  boolean required() default Config.DEFAULT_jsonPropertyRequired;
 }

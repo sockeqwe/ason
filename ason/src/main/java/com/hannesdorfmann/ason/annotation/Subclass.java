@@ -12,34 +12,31 @@ import java.lang.annotation.Target;
  *
  * <p>Examole: <br />
  * {@code
- *  @Json
- *  class Animal {
  *
- *    @Property
- *    String name;
+ * @author Hannes Dorfmann
+ * @Json class Animal {
+ * @Property String name;
+ * @Inheritance({
+ * @Subclass(value = "Dog", Dog.class),
+ * @Subclass(value = "Cat", Cat.class)
+ * })
+ * @Property String type;
  *
- *    @Inheritance({
- *      @Subclass(value = "Dog", Dog.class),
- *      @Subclass(value = "Cat", Cat.class)
- *    })
- *    @Property
- *    String type;
- *
- *  }
+ * }
  *
  * }
  *
  * </p>
  *
- * The example shows, that the json property "type" is responsible to decide which sublass should be
+ * The example shows, that the json property "type" is responsible to decide which sublass should
+ * be
  * instantiated. If  json property "type" equals "Dog" then the an instance of Dog class will be
  * instantiated.
- *
- * @author Hannes Dorfmann
  */
 @Target(value = { ElementType.TYPE, ElementType.METHOD }) @Retention(RetentionPolicy.CLASS)
 @Documented
 public @interface Subclass {
   String value();
+
   Class<?> Class();
 }

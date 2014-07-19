@@ -9,35 +9,33 @@ package com.hannesdorfmann.ason.typeconverter;
  */
 public abstract class TypeConverter<T> {
 
-    public abstract String forType();
+  public abstract String forType();
 
-    public T fromJson(String value) throws Exception {
+  public T fromJson(String value) throws Exception {
 
-        if (value == null) {
-            return getDefaultFromValue();
-        } else {
-            return from(value);
-        }
-
+    if (value == null) {
+      return getDefaultFromValue();
+    } else {
+      return from(value);
     }
+  }
 
-    protected abstract T from(String value) throws Exception;
+  protected abstract T from(String value) throws Exception;
 
-    String toJson(T value) throws Exception {
-        if (value == null) {
-            return getDefaultToValue();
-        } else {
-            return to(value);
-        }
+  String toJson(T value) throws Exception {
+    if (value == null) {
+      return getDefaultToValue();
+    } else {
+      return to(value);
     }
+  }
 
+  public abstract String to(T value);
 
-    public abstract String to(T value);
+  protected abstract T getDefaultFromValue();
 
-    protected abstract T getDefaultFromValue();
-
-    /**
-     * @return
-     */
-    protected abstract String getDefaultToValue();
+  /**
+   * @return
+   */
+  protected abstract String getDefaultToValue();
 }

@@ -80,7 +80,6 @@ import java.util.List;
  * registering the type adapter with Gson.
  * </p>
  *
- *
  * @since 1.0
  */
 // non-Javadoc:
@@ -107,8 +106,9 @@ import java.util.List;
 //
 public abstract class TypeAdapter<T> {
 
-  public Type getListTypeToken(){
-    return new TypeToken<List<T>>(){}.getType();
+  public Type getListTypeToken() {
+    return new TypeToken<List<T>>() {
+    }.getType();
   }
 
   /**
@@ -121,7 +121,6 @@ public abstract class TypeAdapter<T> {
 
   /**
    * Converts {@code value} to a JSON document and writes it to {@code out}.
-   *
    *
    * @param value the Java object to convert. May be null.
    * @since 1.0
@@ -180,6 +179,7 @@ public abstract class TypeAdapter<T> {
           TypeAdapter.this.write(out, value, config);
         }
       }
+
       @Override public T read(JsonReader reader, Config config) throws IOException {
         if (reader.peek() == JsonToken.NULL) {
           reader.nextNull();
@@ -211,7 +211,7 @@ public abstract class TypeAdapter<T> {
   public abstract T read(JsonReader in, Config config) throws IOException;
 
   /**
-   * Converts the JSON document in {@code in} to a Java object. 
+   * Converts the JSON document in {@code in} to a Java object.
    *
    * @return the converted Java object. May be null.
    * @since 1.0
@@ -230,6 +230,4 @@ public abstract class TypeAdapter<T> {
   public final T fromJson(String json, Config config) throws IOException {
     return fromJson(new StringReader(json), config);
   }
-
-
 }

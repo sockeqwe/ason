@@ -15,6 +15,5 @@ import java.lang.annotation.Target;
 @Target(ElementType.TYPE) @Retention(RetentionPolicy.CLASS) @Documented
 public @interface Json {
 
-  Config[] value() default {};
-
+  Config[] value() default { };
 }

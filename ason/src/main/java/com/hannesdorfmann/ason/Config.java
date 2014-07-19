@@ -1,7 +1,6 @@
 package com.hannesdorfmann.ason;
 
 /**
- *
  * A simple class to configurate the Ason processor.
  * You can also set each of the config properties for each Json annotated class by using the
  * {@link com.hannesdorfmann.ason.annotation.Config}
@@ -15,15 +14,6 @@ public class Config {
    * The default value for {@link #ignoreUnknownJsonProperty}
    */
   public static final boolean DEFAULT_ignoreUnknownJsonProperty = true;
-
-  /**
-   * The default value for {@link #writeNullValues}
-   */
-  public static final boolean DEFAULT_writeNullValues = false;
-
-
-  public static final boolean DEFAULT_jsonPropertyRequired = false;
-
   /**
    * If you do <b>not</b> want that an exception will be thrown if a json
    * property is detected that is
@@ -35,12 +25,15 @@ public class Config {
    * </p>
    */
   public boolean ignoreUnknownJsonProperty = DEFAULT_ignoreUnknownJsonProperty;
-
+  /**
+   * The default value for {@link #writeNullValues}
+   */
+  public static final boolean DEFAULT_writeNullValues = false;
   /**
    * Should null values be written while converting java objects to json?
    */
   public boolean writeNullValues = DEFAULT_writeNullValues;
-
+  public static final boolean DEFAULT_jsonPropertyRequired = false;
   /**
    * Is every {@link com.hannesdorfmann.ason.annotation.Property} annoteted property as
    * default required? Required means that an exception will be thrown, if the property is missing

@@ -17,9 +17,9 @@ import java.lang.annotation.Target;
  *
  * @author Hannes Dorfmann
  */
-@Target(value = { ElementType.TYPE }) @Retention(RetentionPolicy.CLASS)
+@Target(value = { ElementType.METHOD }) @Retention(RetentionPolicy.CLASS)
 @Documented
-public @interface Property {
+public @interface PropertySetter {
 
   /**
    * The name of the json property. If not specified (empty string), the field name will be used.
@@ -27,7 +27,7 @@ public @interface Property {
   String value() default "";
 
   /**
-   * @see com.hannesdorfmann.ason.Config#jsonPropertyRequired
+   * @see Config#jsonPropertyRequired
    */
   boolean required() default Config.DEFAULT_jsonPropertyRequired;
 }
