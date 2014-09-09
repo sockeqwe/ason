@@ -5,13 +5,15 @@ import com.hannesdorfmann.ason.annotation.Ignore;
 import com.hannesdorfmann.ason.annotation.Json;
 import com.hannesdorfmann.ason.annotation.Property;
 import com.hannesdorfmann.ason.processor.ProcessorMessage;
-import java.util.HashSet;
+import com.hannesdorfmann.ason.processor.repacked.com.squareup.javawriter.JavaWriter;
+import java.io.Writer;
 import java.util.Set;
 import javax.annotation.processing.Filer;
 import javax.annotation.processing.ProcessingEnvironment;
 import javax.annotation.processing.RoundEnvironment;
 import javax.lang.model.element.Element;
 import javax.lang.model.element.ElementKind;
+import javax.lang.model.element.Modifier;
 import javax.lang.model.element.TypeElement;
 import javax.lang.model.element.VariableElement;
 import javax.lang.model.type.DeclaredType;
@@ -19,6 +21,7 @@ import javax.lang.model.type.TypeKind;
 import javax.lang.model.type.TypeMirror;
 import javax.lang.model.util.Elements;
 import javax.lang.model.util.Types;
+import javax.tools.JavaFileObject;
 
 /**
  * This class is responsible to generate the parser java code for a annotated class
@@ -73,9 +76,9 @@ public class TypeAdapterGenerator {
       config = Config.fromAnnotation(configs[0]); // Read the config annotation
     }
 
-    // check fields
-    Set<JsonAssignment> properties = new HashSet<JsonAssignment>();
+    JsonClass jsonClass = new JsonClass(annotatedClass, getPackageName(annotatedClass), config);
 
+    // check fields
     TypeElement currentClass = annotatedClass;
 
     do {
@@ -88,14 +91,36 @@ public class TypeAdapterGenerator {
             continue;
           }
 
-          if (properties.contains(field.getSimpleName())) {
-            throwException("A field with the name %s in %s already exists for annotated class %s. "
-                    + "Rename this field with @%s or ignore this field with @%s",
-                field.getSimpleName(), currentClass.getSimpleName(), annotatedClass.getSimpleName(),
-                Property.class.getSimpleName(), Ignore.class.getSimpleName());
+          // Check accessablility
+          checkPropertyAccessability(field, currentClass, annotatedClass);
+
+          // Read properties
+          String name = field.getSimpleName().toString();
+          boolean required = config.jsonPropertyRequired;
+
+          Property propertyAnnotation = field.getAnnotation(Property.class);
+          if (propertyAnnotation != null) {
+            String annotatedName = propertyAnnotation.value();
+            if (annotatedName != null && annotatedName.length() > 0) {
+              name = annotatedName;
+            }
+
+            required = propertyAnnotation.required();
           }
+
+          // Check if field already mapped
+          checkPropertyName(jsonClass, name, currentClass, annotatedClass);
+
+          // Everything is ok, so we can add it
+          JsonProperty property = new JsonProperty(name);
+          property.setRequired(required);
+
+          // TODO type adapter
+          jsonClass.addProperty(property);
         }
       }
+
+      // Check super class
       TypeMirror superClassMirror = currentClass.getSuperclass();
       if (superClassMirror.getKind() != TypeKind.NONE) {
         // NONE if java.lang.Object has been reached
@@ -110,6 +135,16 @@ public class TypeAdapterGenerator {
         currentClass = null;
       }
     } while (currentClass != null);
+
+
+
+    // Write the jave code
+    JavaFileObject jfo = filer.createSourceFile(jsonClass.getAdapterClassName(), annotatedClass);
+    Writer writer = jfo.openWriter();
+    JavaWriter jw = new JavaWriter(writer);
+    jsonClass.writeJavaClass(jw);
+    jw.close();
+
   }
 
   /**
@@ -119,5 +154,57 @@ public class TypeAdapterGenerator {
    */
   private void throwException(String msg, Object... params) throws Exception {
     throw new Exception(String.format(msg, params));
+  }
+
+  /**
+   * Checks if the json property is already mapped
+   *
+   * @throws Exception
+   */
+  private void checkPropertyName(JsonClass jsonClass, String propertyName, TypeElement currentClass,
+      TypeElement annotatedClass) throws Exception {
+
+    if (jsonClass.containsProperty(propertyName)) {
+
+      throwException("A field with the name %s in %s already exists for annotated class %s. "
+              + "Rename this field with @%s or ignore this field with @%s", propertyName,
+          currentClass.getSimpleName(), annotatedClass.getSimpleName(),
+          Property.class.getSimpleName(), Ignore.class.getSimpleName());
+    }
+  }
+
+  private void checkPropertyAccessability(VariableElement field, TypeElement currentClass,
+      TypeElement annotatedClass) throws Exception {
+
+    Set<Modifier> modifiers = field.getModifiers();
+
+    // Final is not allowed
+    if (modifiers.contains(Modifier.FINAL)) {
+      throwException("Field with the name %s in %s is declared as FINAL for annotated class %s. "
+              + "FINAL fields can not be assigned! Remove final modifier or ignore this field with @%s",
+          field.getSimpleName(), currentClass.getSimpleName().toString(),
+          annotatedClass.getSimpleName(), Ignore.class.getSimpleName());
+    }
+
+    // private fields are not allowed
+    if (modifiers.contains(Modifier.PRIVATE)) {
+      throwException("Field with the name %s in %s is declared as PRIVATE for annotated class %s. "
+              + "Only PUBLIC or DEFAULT (PACKAGE VISIBLITY) is allowed. "
+              + "If you don't want to map this field, then you can ignore this field with @%s",
+          field.getSimpleName().toString(), currentClass.getSimpleName(),
+          annotatedClass.getSimpleName(), Ignore.class.getSimpleName());
+    }
+
+    // protected fields are not allowed
+    if (modifiers.contains(Modifier.PROTECTED)) {
+      throwException(
+          "Field with the name %s in %s is declared as PROTECTED for annotated class %s. "
+              + "Only PUBLIC or DEFAULT (package visibility) is allowed. "
+              + "If you don't want to map this field, then you can ignore this field with @%s",
+          field.getSimpleName().toString(), currentClass.getSimpleName(),
+          annotatedClass.getSimpleName(), Ignore.class.getSimpleName());
+    }
+
+    // TODO transient support?
   }
 }

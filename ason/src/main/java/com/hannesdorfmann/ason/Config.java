@@ -11,6 +11,10 @@ package com.hannesdorfmann.ason;
 public class Config {
 
   /**
+   * The default value for {@link #ignoreUnknownJsonProperty}
+   */
+  public static final boolean DEFAULT_ignoreUnknownJsonProperty = true;
+  /**
    * If you do <b>not</b> want that an exception will be thrown if a json
    * property is detected that is
    * not present in the corresponding java class.
@@ -22,46 +26,26 @@ public class Config {
    */
   public boolean ignoreUnknownJsonProperty = DEFAULT_ignoreUnknownJsonProperty;
 
+  //
+  // Default options
+  //
   /**
-   * Is every {@link com.hannesdorfmann.ason.annotation.Property} annoteted property as
-   * default required? Required means that an exception will be thrown, if the property is missing
-   * is json.
+   * The default value for {@link #writeNullValues}
    */
-  public boolean jsonPropertyRequired = DEFAULT_jsonPropertyRequired;
-
+  public static final boolean DEFAULT_writeNullValues = false;
   /**
    * Should null values be written while converting java objects to json?
    */
   public boolean writeNullValues = DEFAULT_writeNullValues;
 
-
-  //
-  // Default options
-  //
-
-  /**
-   * The default value for {@link #ignoreUnknownJsonProperty}
-   */
-  public static final boolean DEFAULT_ignoreUnknownJsonProperty = true;
-
-  /**
-   * The default value for {@link #writeNullValues}
-   */
-  public static final boolean DEFAULT_writeNullValues = false;
-
-  public static final boolean DEFAULT_jsonPropertyRequired = false;
-
   /**
    * Creates a real config object out of the config annotation
-   * @param annotation
-   * @return
    */
-  public static Config fromAnnotation(com.hannesdorfmann.ason.annotation.Config annotation){
+  public static Config fromAnnotation(com.hannesdorfmann.ason.annotation.Config annotation) {
 
     Config c = new Config();
     c.ignoreUnknownJsonProperty = annotation.ignoreUnknownProperties();
     c.writeNullValues = annotation.writeNullValues();
     return c;
-
   }
 }
