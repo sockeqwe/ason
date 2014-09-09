@@ -1,5 +1,6 @@
 package com.hannesdorfmann.ason;
 
+import com.hannesdorfmann.ason.converter.Converter;
 import com.hannesdorfmann.ason.internal.Primitives;
 import com.hannesdorfmann.ason.reflect.TypeToken;
 import com.hannesdorfmann.ason.stream.JsonReader;
@@ -17,20 +18,40 @@ import java.util.List;
 import java.util.Map;
 
 /**
+ * This is a singleton, so use {@link #getInstance()}
  * @author Hannes Dorfmann
  * @since 1.0
  */
 public class Ason {
 
   /**
+   * The singleton instance
+   */
+  public static Ason INSTANCE = new Ason();
+
+  /**
    * The suffix for the generated ParserWriter
    */
-  public static final String PARSER_WRITER_SUFFIX = "AsonParserWriter";
+  public static final String TYPE_ADAPTER_SUFFIX = "TypeAdapter";
 
+  // TODO  is synchronized needed?
   private final Map<TypeToken<?>, TypeAdapter<?>> typeTokenCache =
       Collections.synchronizedMap(new HashMap<TypeToken<?>, TypeAdapter<?>>());
 
+  // TODO  is synchronized needed?
+  private final Map<String, Converter<?>> converterCache =
+      Collections.synchronizedMap(new HashMap<String, Converter<?>>());
+
   private Config config = new Config();
+
+  private Ason(){
+    // Singleton
+    // TODO read generated classes
+  }
+
+  public static Ason getInstance(){
+    return INSTANCE;
+  }
 
   private static void assertFullConsumption(Object obj, JsonReader reader) {
     try {
@@ -139,7 +160,7 @@ public class Ason {
   public <T> T fromJson(Reader json, Class<T> classOfT)
       throws JsonSyntaxException, JsonIOException {
     JsonReader jsonReader = new JsonReader(json);
-    Object object = fromJson(jsonReader, classOfT, config);
+    Object object = fromJson(jsonReader, classOfT, this);
     assertFullConsumption(object, jsonReader);
     return Primitives.wrap(classOfT).cast(object);
   }
@@ -166,7 +187,7 @@ public class Ason {
   @SuppressWarnings("unchecked")
   public <T> T fromJson(Reader json, Type typeOfT) throws JsonIOException, JsonSyntaxException {
     JsonReader jsonReader = new JsonReader(json);
-    T object = (T) fromJson(jsonReader, typeOfT, config);
+    T object = (T) fromJson(jsonReader, typeOfT, this);
     assertFullConsumption(object, jsonReader);
     return object;
   }
@@ -180,7 +201,7 @@ public class Ason {
    * @throws JsonSyntaxException if json is not a valid representation for an object of type
    */
   @SuppressWarnings("unchecked")
-  public <T> T fromJson(JsonReader reader, Type typeOfT, Config config)
+  public <T> T fromJson(JsonReader reader, Type typeOfT, Ason ason)
       throws JsonIOException, JsonSyntaxException {
     boolean isEmpty = true;
     boolean oldLenient = reader.isLenient();
@@ -196,7 +217,7 @@ public class Ason {
       //}
 
       TypeAdapter<T> typeAdapter = getAdapter(typeToken);
-      T object = typeAdapter.read(reader, config);
+      T object = typeAdapter.read(reader, ason);
       return object;
     } catch (EOFException e) {
       /*
@@ -222,8 +243,36 @@ public class Ason {
     return (TypeAdapter<T>) cached;
   }
 
+  public void removeAdapter(TypeToken<?> type){
+    typeTokenCache.remove(type);
+  }
+
+  public <T> void addAdapter(TypeToken<T> type, TypeAdapter<T> adapter){
+    typeTokenCache.put(type, adapter);
+  }
+
   private <T> Type getJsonArrayType() {
     return new TypeToken<List<T>>() {
-     }.getType();
+    }.getType();
+  }
+
+  public Converter<?> getConverter(String canonicalClassName) {
+    return converterCache.get(canonicalClassName);
+  }
+
+  public Converter<?> getConverter(Class<?> clazz) {
+    return getConverter(clazz.getCanonicalName());
+  }
+
+  public void addConverter(Converter<?> converter) {
+    converterCache.put(converter.getTypeCanonicalName(), converter);
+  }
+
+  public void removeConverter(Converter<?> converter){
+     removeConverter(converter.getTypeCanonicalName());
+  }
+
+  public void removeConverter(String canonicalClassName){
+    converterCache.remove(canonicalClassName);
   }
 }

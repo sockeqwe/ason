@@ -7,15 +7,16 @@ import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 
 /**
- * This annotation is used within a {@link Inheritance} annotation to specify which sublass should
- * be choosen by the given name.
+ * This annotation is used within a {@link Inheritance} annotation to specify which subclass should
+ * be chosen by the given name.
  *
- * <p>Examole: <br />
+ * <p>Example: <br />
  * {@code
  *
- * @author Hannes Dorfmann
  * @Json class Animal {
+ *
  * @Property String name;
+ *
  * @Inheritance({
  * @Subclass(value = "Dog", Dog.class),
  * @Subclass(value = "Cat", Cat.class)
@@ -32,6 +33,9 @@ import java.lang.annotation.Target;
  * be
  * instantiated. If  json property "type" equals "Dog" then the an instance of Dog class will be
  * instantiated.
+ *
+ *
+ * @author Hannes Dorfmann
  */
 @Target(value = { ElementType.TYPE, ElementType.METHOD }) @Retention(RetentionPolicy.CLASS)
 @Documented
