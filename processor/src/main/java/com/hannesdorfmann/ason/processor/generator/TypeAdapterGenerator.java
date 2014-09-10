@@ -96,7 +96,7 @@ public class TypeAdapterGenerator {
 
           // Read properties
           String name = field.getSimpleName().toString();
-          boolean required = config.jsonPropertyRequired;
+          boolean required = false;
 
           Property propertyAnnotation = field.getAnnotation(Property.class);
           if (propertyAnnotation != null) {
@@ -112,7 +112,7 @@ public class TypeAdapterGenerator {
           checkPropertyName(jsonClass, name, currentClass, annotatedClass);
 
           // Everything is ok, so we can add it
-          JsonProperty property = new JsonProperty(name);
+          JsonProperty property = new JsonProperty(field, name);
           property.setRequired(required);
 
           // TODO type adapter

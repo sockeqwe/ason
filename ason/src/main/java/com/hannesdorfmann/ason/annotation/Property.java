@@ -1,6 +1,5 @@
 package com.hannesdorfmann.ason.annotation;
 
-import com.hannesdorfmann.ason.Config;
 import java.lang.annotation.Documented;
 import java.lang.annotation.ElementType;
 import java.lang.annotation.Retention;
@@ -26,8 +25,6 @@ public @interface Property {
    */
   String value() default "";
 
-  /**
-   * @see com.hannesdorfmann.ason.Config#jsonPropertyRequired
-   */
-  boolean required() default Config.DEFAULT_jsonPropertyRequired;
+
+  boolean required() default false;
 }
